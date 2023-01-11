@@ -3,15 +3,18 @@ package repos
 import (
 	"context"
 	"fmt"
+
+	"github.com/google/uuid"
 )
 
 var _ Data = &Shop{}
 
 type Shop struct {
-	Name     string `json:"name" validate:"required"`
-	Address  string `json:"address" validate:"required"`
-	IsClosed bool   `json:"is_closed" validate:"required"`
-	Owner    string `json:"owner"`
+	Id       uuid.UUID `json:"id" validate:"required"`
+	Name     string    `json:"name" validate:"required"`
+	Address  string    `json:"address" validate:"required"`
+	IsClosed bool      `json:"is_closed" validate:"required"`
+	Owner    string    `json:"owner"`
 }
 
 // storage wrapper
@@ -31,8 +34,22 @@ func (ss *Shops) Create(ctx context.Context, s Shop) error {
 	return nil
 }
 
-func (ss *Shops) Read(ctx context.Context, name string) (*Shop, error) {
+func (ss *Shops) ReadName(ctx context.Context, name string) (*Shop, error) {
 	data, err := ss.storage.Read(ctx, &Shop{Name: name})
+	if err != nil {
+		return nil, fmt.Errorf("read user error: %v", err)
+	}
+
+	s, ok := data.(*Shop)
+	if !ok {
+		return nil, fmt.Errorf("read user error: %v", err)
+	}
+
+	return s, nil
+}
+
+func (ss *Shops) ReadId(ctx context.Context, uid uuid.UUID) (*Shop, error) {
+	data, err := ss.storage.Read(ctx, &Shop{Id: uid})
 	if err != nil {
 		return nil, fmt.Errorf("read user error: %v", err)
 	}

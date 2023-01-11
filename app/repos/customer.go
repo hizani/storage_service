@@ -4,11 +4,14 @@ import (
 	"context"
 	"fmt"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 var _ Data = &Customer{}
 
 type Customer struct {
+	Id         uuid.UUID `json:"id" validate:"required"`
 	Surname    string    `json:"surname" validate:"required"`
 	Name       string    `json:"name" validate:"required"`
 	Patronymic string    `json:"patronymic" validate:"required"`
@@ -33,8 +36,22 @@ func (cs *Customers) Create(ctx context.Context, c Customer) error {
 	return nil
 }
 
-func (cs *Customers) Read(ctx context.Context, surname string) (*Customer, error) {
+func (cs *Customers) ReadSurname(ctx context.Context, surname string) (*Customer, error) {
 	uinterface, err := cs.storage.Read(ctx, &Customer{Surname: surname})
+	if err != nil {
+		return nil, fmt.Errorf("read customer error: %v", err)
+	}
+
+	u, ok := uinterface.(*Customer)
+	if !ok {
+		return nil, fmt.Errorf("read customer error: %v", err)
+	}
+
+	return u, nil
+}
+
+func (cs *Customers) ReadId(ctx context.Context, uid uuid.UUID) (*Customer, error) {
+	uinterface, err := cs.storage.Read(ctx, &Customer{Id: uid})
 	if err != nil {
 		return nil, fmt.Errorf("read customer error: %v", err)
 	}

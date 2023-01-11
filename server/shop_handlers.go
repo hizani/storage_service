@@ -6,14 +6,34 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
 func (s *Server) getShopByIdHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+	id := vars["id"]
+
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		http.Error(w, "not valid uuid", http.StatusBadRequest)
+	}
+
+	sh, err := s.shops.ReadId(r.Context(), uid)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusFound)
+	_ = json.NewEncoder(w).Encode(*sh)
+}
+
+func (s *Server) getShopByNameHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
 	name := vars["name"]
 
-	sh, err := s.shops.Read(r.Context(), name)
+	sh, err := s.shops.ReadName(r.Context(), name)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -25,10 +45,15 @@ func (s *Server) getShopByIdHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) getShopFieldByIdHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	name := vars["name"]
+	id := vars["id"]
 	field := vars["field"]
 
-	c, err := s.shops.Read(r.Context(), name)
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		http.Error(w, "not valid uuid", http.StatusBadRequest)
+	}
+
+	c, err := s.shops.ReadId(r.Context(), uid)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return

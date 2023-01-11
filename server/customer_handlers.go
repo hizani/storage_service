@@ -6,14 +6,34 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
 func (s *Server) getCustomerByIdHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+	id := vars["id"]
+
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		http.Error(w, "not valid uuid", http.StatusBadRequest)
+	}
+
+	c, err := s.customers.ReadId(r.Context(), uid)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusFound)
+	_ = json.NewEncoder(w).Encode(*c)
+}
+
+func (s *Server) getCustomerBySurnameHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
 	surname := vars["surname"]
 
-	c, err := s.customers.Read(r.Context(), surname)
+	c, err := s.customers.ReadSurname(r.Context(), surname)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -25,10 +45,15 @@ func (s *Server) getCustomerByIdHandler(w http.ResponseWriter, r *http.Request) 
 
 func (s *Server) getCustomerFieldByIdHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	surname := vars["surname"]
+	id := vars["id"]
 	field := vars["field"]
 
-	c, err := s.customers.Read(r.Context(), surname)
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		http.Error(w, "not valid uuid", http.StatusBadRequest)
+	}
+
+	c, err := s.customers.ReadId(r.Context(), uid)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return

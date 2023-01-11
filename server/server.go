@@ -19,14 +19,16 @@ type Server struct {
 func New(address string) *Server {
 	var s *Server = &Server{srv: http.Server{Addr: address}}
 	router := mux.NewRouter()
-	router.HandleFunc("/customers/{surname}", s.getCustomerByIdHandler).Methods("GET")
-	router.HandleFunc("/customers/{surname}/{field}", s.getCustomerFieldByIdHandler).Methods("GET")
-	router.HandleFunc("/customers/delete/{surname}", s.deleteCustomerByIdHandler).Methods("DELETE")
+	router.HandleFunc("/customers/search/{surname}", s.getCustomerBySurnameHandler).Methods("GET")
+	router.HandleFunc("/customers/{id}", s.getCustomerByIdHandler).Methods("GET")
+	router.HandleFunc("/customers/{id}/{field}", s.getCustomerFieldByIdHandler).Methods("GET")
+	router.HandleFunc("/customers/delete/{id}", s.deleteCustomerByIdHandler).Methods("DELETE")
 	router.HandleFunc("/customers/create", s.createCustomerHandler).Methods("POST")
 
-	router.HandleFunc("/shops/{name}", s.getShopByIdHandler).Methods("GET")
-	router.HandleFunc("/shops/{name}/{field}", s.getShopFieldByIdHandler).Methods("GET")
-	router.HandleFunc("/shops/delete/{name}", s.deleteShopByIdHandler).Methods("DELETE")
+	router.HandleFunc("/shops/search/{name}", s.getShopByNameHandler).Methods("GET")
+	router.HandleFunc("/shops/{id}", s.getShopByIdHandler).Methods("GET")
+	router.HandleFunc("/shops/{id}/{field}", s.getShopFieldByIdHandler).Methods("GET")
+	router.HandleFunc("/shops/delete/{id}", s.deleteShopByIdHandler).Methods("DELETE")
 	router.HandleFunc("/shops/create", s.createShopHandler).Methods("POST")
 	s.srv.Handler = router
 	return s
