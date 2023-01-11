@@ -26,7 +26,7 @@ type HTTPServer interface {
 
 func (a *App) Serve(ctx context.Context, wg *sync.WaitGroup, hs HTTPServer) {
 	defer wg.Done()
-	hs.Start(a.cs, a.ss)
+	go hs.Start(a.cs, a.ss)
 	<-ctx.Done()
 	hs.Stop()
 }
