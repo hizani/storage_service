@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"crud_service/app/repos"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -51,4 +52,14 @@ func (s *Server) Stop() {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	_ = s.srv.Shutdown(ctx)
 	cancel()
+}
+
+func interfaceToJson(name string, value interface{}) []byte {
+	if elem, ok := value.(float64); ok {
+		return []byte(fmt.Sprintf(`{"%v":%v}`, name, elem))
+	}
+	if elem, ok := value.(bool); ok {
+		return []byte(fmt.Sprintf(`{"%v":%v}`, name, elem))
+	}
+	return []byte((fmt.Sprintf(`{"%v":"%v"}`, name, value)))
 }

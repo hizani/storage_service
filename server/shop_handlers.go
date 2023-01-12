@@ -70,11 +70,8 @@ func (s *Server) getShopFieldByIdHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.WriteHeader(http.StatusFound)
-	msg := fmt.Sprintf(`{"%v":"%v"}`, field, elem)
-	if elem, ok := elem.(float64); ok {
-		msg = fmt.Sprintf(`{"%v":%v}`, field, elem)
-	}
-	w.Write([]byte(fmt.Sprintln(msg)))
+	msg := interfaceToJson(field, elem)
+	w.Write(msg)
 }
 
 func (s *Server) deleteShopByIdHandler(w http.ResponseWriter, r *http.Request) {

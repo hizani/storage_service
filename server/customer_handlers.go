@@ -69,11 +69,8 @@ func (s *Server) getCustomerFieldByIdHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	w.WriteHeader(http.StatusFound)
-	msg := fmt.Sprintf(`{"%v":"%v"}`, field, elem)
-	if elem, ok := elem.(float64); ok {
-		msg = fmt.Sprintf(`{"%v":%v}`, field, elem)
-	}
-	w.Write([]byte(fmt.Sprintln(msg)))
+	msg := interfaceToJson(field, elem)
+	w.Write(msg)
 }
 
 func (s *Server) deleteCustomerByIdHandler(w http.ResponseWriter, r *http.Request) {
