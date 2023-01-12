@@ -45,6 +45,15 @@ func (cs *customers) create(ctx context.Context, c repos.Customer) (*uuid.UUID, 
 }
 
 func (cs *customers) readSurname(ctx context.Context, surname string) ([]repos.Data, error) {
+	cs.RLock()
+	defer cs.RUnlock()
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
 	data := []repos.Data{}
 	for _, elem := range cs.m {
 		if elem.Surname == surname {
@@ -67,7 +76,7 @@ func (cs *customers) read(ctx context.Context, uid uuid.UUID) ([]repos.Data, err
 	data, ok := cs.m[uid]
 
 	if !ok {
-		return nil, fmt.Errorf("no customer with such uuid: %v", uid)
+		return nil, fmt.Errorf("no customer with such uuid")
 	}
 	return []repos.Data{&data}, nil
 

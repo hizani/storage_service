@@ -40,6 +40,15 @@ func (ss *shops) create(ctx context.Context, s repos.Shop) (*uuid.UUID, error) {
 }
 
 func (ss *shops) readName(ctx context.Context, name string) ([]repos.Data, error) {
+	ss.RLock()
+	defer ss.RUnlock()
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
 	data := []repos.Data{}
 	for _, elem := range ss.m {
 		if elem.Name == name {
