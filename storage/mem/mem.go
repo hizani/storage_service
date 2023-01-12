@@ -37,14 +37,14 @@ func (ms *MemStorage) Create(ctx context.Context, data repos.Data) (*uuid.UUID, 
 }
 func (ms *MemStorage) Read(ctx context.Context, data repos.Data) ([]repos.Data, error) {
 	if d, ok := data.(*repos.Customer); ok {
-		if d.Id.String() == "00000000-0000-0000-0000-000000000000" || d.Id.String() == "" {
+		if d.Id == uuid.Nil || d.Id.String() == "" {
 			return ms.customers.readSurname(ctx, d.Surname)
 		}
 		return ms.customers.read(ctx, d.Id)
 	}
 
 	if d, ok := data.(*repos.Shop); ok {
-		if d.Id.String() == "00000000-0000-0000-0000-000000000000" || d.Id.String() == "" {
+		if d.Id == uuid.Nil || d.Id.String() == "" {
 			return ms.shops.readName(ctx, d.Name)
 		}
 		return ms.shops.read(ctx, d.Id)
