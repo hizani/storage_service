@@ -15,7 +15,7 @@ type Customer struct {
 	Surname    string    `json:"surname" validate:"required"`
 	Name       string    `json:"name" validate:"required"`
 	Patronymic string    `json:"patronymic" validate:"required"`
-	Age        uint      `json:"age"`
+	Age        *uint     `json:"age"`
 	RegDate    time.Time `json:"reg_date" validate:"required"`
 }
 
@@ -54,22 +54,18 @@ func (cs *Customers) ReadSurname(ctx context.Context, surname string) ([]*Custom
 	return customers, nil
 }
 
-func (cs *Customers) ReadId(ctx context.Context, uid uuid.UUID) ([]*Customer, error) {
+func (cs *Customers) ReadId(ctx context.Context, uid uuid.UUID) (*Customer, error) {
 	data, err := cs.storage.Read(ctx, &Customer{Id: uid})
 	if err != nil {
 		return nil, fmt.Errorf("read customer error: %v", err)
 	}
 
-	customers := []*Customer{}
-	for _, elem := range data {
-		u, ok := elem.(*Customer)
-		if !ok {
-			return nil, fmt.Errorf("read customer error: %v", err)
-		}
-		customers = append(customers, u)
+	c, ok := data[0].(*Customer)
+	if !ok {
+		return nil, fmt.Errorf("read customer error: %v", err)
 	}
 
-	return customers, nil
+	return c, nil
 }
 
 func (cs *Customers) Delete(ctx context.Context, uid uuid.UUID) (*Customer, error) {
@@ -77,5 +73,5 @@ func (cs *Customers) Delete(ctx context.Context, uid uuid.UUID) (*Customer, erro
 	if err != nil {
 		return nil, fmt.Errorf("can not find customer: %v", err)
 	}
-	return c[0].(*Customer), cs.storage.Delete(ctx, &c[0])
+	return c[0].(*Customer), cs.storage.Delete(ctx, c[0])
 }

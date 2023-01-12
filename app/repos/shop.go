@@ -14,7 +14,7 @@ type Shop struct {
 	Name     string    `json:"name" validate:"required"`
 	Address  string    `json:"address" validate:"required"`
 	IsClosed bool      `json:"is_closed" validate:"required"`
-	Owner    string    `json:"owner"`
+	Owner    *string   `json:"owner"`
 }
 
 // storage wrapper
@@ -52,22 +52,18 @@ func (ss *Shops) ReadName(ctx context.Context, name string) ([]*Shop, error) {
 	return shops, nil
 }
 
-func (ss *Shops) ReadId(ctx context.Context, uid uuid.UUID) ([]*Shop, error) {
+func (ss *Shops) ReadId(ctx context.Context, uid uuid.UUID) (*Shop, error) {
 	data, err := ss.storage.Read(ctx, &Shop{Id: uid})
 	if err != nil {
 		return nil, fmt.Errorf("read user error: %v", err)
 	}
 
-	shops := []*Shop{}
-	for _, elem := range data {
-		u, ok := elem.(*Shop)
-		if !ok {
-			return nil, fmt.Errorf("read customer error: %v", err)
-		}
-		shops = append(shops, u)
+	s, ok := data[0].(*Shop)
+	if !ok {
+		return nil, fmt.Errorf("read customer error: %v", err)
 	}
 
-	return shops, nil
+	return s, nil
 }
 
 func (ss *Shops) Delete(ctx context.Context, uid uuid.UUID) (*Shop, error) {
@@ -75,5 +71,5 @@ func (ss *Shops) Delete(ctx context.Context, uid uuid.UUID) (*Shop, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read user error: %v", err)
 	}
-	return s[0].(*Shop), ss.storage.Delete(ctx, &s[0])
+	return s[0].(*Shop), ss.storage.Delete(ctx, s[0])
 }
