@@ -26,47 +26,54 @@ func NewShops(storage Storage) *Shops {
 	return &Shops{storage}
 }
 
-func (ss *Shops) Create(ctx context.Context, s Shop) error {
-	err := ss.storage.Create(ctx, &s)
+func (ss *Shops) Create(ctx context.Context, s Shop) (*uuid.UUID, error) {
+	uid, err := ss.storage.Create(ctx, &s)
 	if err != nil {
-		return fmt.Errorf("create user error: %v", err)
+		return nil, fmt.Errorf("create user error: %v", err)
 	}
-	return nil
+	return uid, nil
 }
 
-func (ss *Shops) ReadName(ctx context.Context, name string) (*Shop, error) {
+func (ss *Shops) ReadName(ctx context.Context, name string) ([]*Shop, error) {
 	data, err := ss.storage.Read(ctx, &Shop{Name: name})
 	if err != nil {
 		return nil, fmt.Errorf("read user error: %v", err)
 	}
 
-	s, ok := data.(*Shop)
-	if !ok {
-		return nil, fmt.Errorf("read user error: %v", err)
+	shops := []*Shop{}
+	for _, elem := range data {
+		u, ok := elem.(*Shop)
+		if !ok {
+			return nil, fmt.Errorf("read customer error: %v", err)
+		}
+		shops = append(shops, u)
 	}
 
-	return s, nil
+	return shops, nil
 }
 
-func (ss *Shops) ReadId(ctx context.Context, uid uuid.UUID) (*Shop, error) {
+func (ss *Shops) ReadId(ctx context.Context, uid uuid.UUID) ([]*Shop, error) {
 	data, err := ss.storage.Read(ctx, &Shop{Id: uid})
 	if err != nil {
 		return nil, fmt.Errorf("read user error: %v", err)
 	}
 
-	s, ok := data.(*Shop)
-	if !ok {
-		return nil, fmt.Errorf("read user error: %v", err)
+	shops := []*Shop{}
+	for _, elem := range data {
+		u, ok := elem.(*Shop)
+		if !ok {
+			return nil, fmt.Errorf("read customer error: %v", err)
+		}
+		shops = append(shops, u)
 	}
 
-	return s, nil
+	return shops, nil
 }
 
-func (ss *Shops) Delete(ctx context.Context, name string) (*Shop, error) {
-	s := Shop{Name: name}
-	u, err := ss.storage.Read(ctx, &s)
+func (ss *Shops) Delete(ctx context.Context, uid uuid.UUID) (*Shop, error) {
+	s, err := ss.storage.Read(ctx, &Shop{Id: uid})
 	if err != nil {
 		return nil, fmt.Errorf("read user error: %v", err)
 	}
-	return u.(*Shop), ss.storage.Delete(ctx, &s)
+	return s[0].(*Shop), ss.storage.Delete(ctx, &s[0])
 }

@@ -26,7 +26,7 @@ func (s *Server) getCustomerByIdHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.WriteHeader(http.StatusFound)
-	_ = json.NewEncoder(w).Encode(*c)
+	_ = json.NewEncoder(w).Encode(c)
 }
 
 func (s *Server) getCustomerBySurnameHandler(w http.ResponseWriter, r *http.Request) {
@@ -40,7 +40,7 @@ func (s *Server) getCustomerBySurnameHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	w.WriteHeader(http.StatusFound)
-	_ = json.NewEncoder(w).Encode(*c)
+	_ = json.NewEncoder(w).Encode(c)
 }
 
 func (s *Server) getCustomerFieldByIdHandler(w http.ResponseWriter, r *http.Request) {
@@ -78,9 +78,14 @@ func (s *Server) getCustomerFieldByIdHandler(w http.ResponseWriter, r *http.Requ
 
 func (s *Server) deleteCustomerByIdHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	surname := vars["surname"]
+	id := vars["id"]
 
-	c, err := s.customers.Delete(r.Context(), surname)
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		http.Error(w, "not valid uuid", http.StatusBadRequest)
+	}
+
+	c, err := s.customers.Delete(r.Context(), uid)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -99,11 +104,13 @@ func (s *Server) createCustomerHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
-	err := s.customers.Create(r.Context(), *c)
+	uid, err := s.customers.Create(r.Context(), *c)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
+	msg := fmt.Sprintf(`{"id":"%v"}`, uid.String())
+	w.Write([]byte(msg))
 }

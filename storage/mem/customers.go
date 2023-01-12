@@ -23,13 +23,13 @@ func newCustomers() *customers {
 	}
 }
 
-func (cs *customers) create(ctx context.Context, c repos.Customer) error {
+func (cs *customers) create(ctx context.Context, c repos.Customer) (*uuid.UUID, error) {
 	cs.Lock()
 	defer cs.Unlock()
 
 	select {
 	case <-ctx.Done():
-		return ctx.Err()
+		return nil, ctx.Err()
 	default:
 	}
 	c.Id = uuid.New()
@@ -38,22 +38,23 @@ func (cs *customers) create(ctx context.Context, c repos.Customer) error {
 	}
 
 	if !checkRequiredFields(&c) {
-		return errors.New("required field is missing")
+		return nil, errors.New("required field is missing")
 	}
 	cs.m[c.Id] = c
-	return nil
+	return &c.Id, nil
 }
 
-func (cs *customers) readSurname(ctx context.Context, surname string) (*repos.Customer, error) {
+func (cs *customers) readSurname(ctx context.Context, surname string) ([]repos.Data, error) {
+	data := []repos.Data{}
 	for _, elem := range cs.m {
 		if elem.Surname == surname {
-			return &elem, nil
+			data = append(data, &elem)
 		}
 	}
-	return nil, fmt.Errorf("no customer with such surname")
+	return data, nil
 }
 
-func (cs *customers) read(ctx context.Context, uid uuid.UUID) (*repos.Customer, error) {
+func (cs *customers) read(ctx context.Context, uid uuid.UUID) ([]repos.Data, error) {
 	cs.RLock()
 	defer cs.RUnlock()
 
@@ -68,7 +69,7 @@ func (cs *customers) read(ctx context.Context, uid uuid.UUID) (*repos.Customer, 
 	if !ok {
 		return nil, fmt.Errorf("no customer with such uuid: %v", uid)
 	}
-	return &data, nil
+	return []repos.Data{&data}, nil
 
 }
 

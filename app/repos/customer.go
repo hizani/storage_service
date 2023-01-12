@@ -28,47 +28,54 @@ func NewCustomers(storage Storage) *Customers {
 	return &Customers{storage}
 }
 
-func (cs *Customers) Create(ctx context.Context, c Customer) error {
-	err := cs.storage.Create(ctx, &c)
+func (cs *Customers) Create(ctx context.Context, c Customer) (*uuid.UUID, error) {
+	uid, err := cs.storage.Create(ctx, &c)
 	if err != nil {
-		return fmt.Errorf("create customer error: %v", err)
+		return nil, fmt.Errorf("create customer error: %v", err)
 	}
-	return nil
+	return uid, nil
 }
 
-func (cs *Customers) ReadSurname(ctx context.Context, surname string) (*Customer, error) {
-	uinterface, err := cs.storage.Read(ctx, &Customer{Surname: surname})
-	if err != nil {
-		return nil, fmt.Errorf("read customer error: %v", err)
-	}
-
-	u, ok := uinterface.(*Customer)
-	if !ok {
-		return nil, fmt.Errorf("read customer error: %v", err)
-	}
-
-	return u, nil
-}
-
-func (cs *Customers) ReadId(ctx context.Context, uid uuid.UUID) (*Customer, error) {
-	uinterface, err := cs.storage.Read(ctx, &Customer{Id: uid})
+func (cs *Customers) ReadSurname(ctx context.Context, surname string) ([]*Customer, error) {
+	data, err := cs.storage.Read(ctx, &Customer{Surname: surname})
 	if err != nil {
 		return nil, fmt.Errorf("read customer error: %v", err)
 	}
 
-	u, ok := uinterface.(*Customer)
-	if !ok {
+	customers := []*Customer{}
+	for _, elem := range data {
+		u, ok := elem.(*Customer)
+		if !ok {
+			return nil, fmt.Errorf("read customer error: %v", err)
+		}
+		customers = append(customers, u)
+	}
+
+	return customers, nil
+}
+
+func (cs *Customers) ReadId(ctx context.Context, uid uuid.UUID) ([]*Customer, error) {
+	data, err := cs.storage.Read(ctx, &Customer{Id: uid})
+	if err != nil {
 		return nil, fmt.Errorf("read customer error: %v", err)
 	}
 
-	return u, nil
+	customers := []*Customer{}
+	for _, elem := range data {
+		u, ok := elem.(*Customer)
+		if !ok {
+			return nil, fmt.Errorf("read customer error: %v", err)
+		}
+		customers = append(customers, u)
+	}
+
+	return customers, nil
 }
 
-func (cs *Customers) Delete(ctx context.Context, surname string) (*Customer, error) {
-	c := Customer{Surname: surname}
-	u, err := cs.storage.Read(ctx, &c)
+func (cs *Customers) Delete(ctx context.Context, uid uuid.UUID) (*Customer, error) {
+	c, err := cs.storage.Read(ctx, &Customer{Id: uid})
 	if err != nil {
 		return nil, fmt.Errorf("can not find customer: %v", err)
 	}
-	return u.(*Customer), cs.storage.Delete(ctx, &c)
+	return c[0].(*Customer), cs.storage.Delete(ctx, &c[0])
 }

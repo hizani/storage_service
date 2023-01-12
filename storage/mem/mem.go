@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 var _ repos.Storage = &MemStorage{}
@@ -23,7 +25,7 @@ func New() *MemStorage {
 	return &MemStorage{c, s}
 }
 
-func (ms *MemStorage) Create(ctx context.Context, data repos.Data) error {
+func (ms *MemStorage) Create(ctx context.Context, data repos.Data) (*uuid.UUID, error) {
 	if d, ok := data.(*repos.Customer); ok {
 		return ms.customers.create(ctx, *d)
 	}
@@ -31,9 +33,9 @@ func (ms *MemStorage) Create(ctx context.Context, data repos.Data) error {
 		return ms.shops.create(ctx, *d)
 	}
 
-	return fmt.Errorf("there is no storage for this type of data")
+	return nil, fmt.Errorf("there is no storage for this type of data")
 }
-func (ms *MemStorage) Read(ctx context.Context, data repos.Data) (repos.Data, error) {
+func (ms *MemStorage) Read(ctx context.Context, data repos.Data) ([]repos.Data, error) {
 	if d, ok := data.(*repos.Customer); ok {
 		if d.Id.String() == "00000000-0000-0000-0000-000000000000" || d.Id.String() == "" {
 			return ms.customers.readSurname(ctx, d.Surname)

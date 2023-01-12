@@ -26,7 +26,7 @@ func (s *Server) getShopByIdHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusFound)
-	_ = json.NewEncoder(w).Encode(*sh)
+	_ = json.NewEncoder(w).Encode(sh)
 }
 
 func (s *Server) getShopByNameHandler(w http.ResponseWriter, r *http.Request) {
@@ -40,7 +40,7 @@ func (s *Server) getShopByNameHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusFound)
-	_ = json.NewEncoder(w).Encode(*sh)
+	_ = json.NewEncoder(w).Encode(sh)
 }
 
 func (s *Server) getShopFieldByIdHandler(w http.ResponseWriter, r *http.Request) {
@@ -79,9 +79,14 @@ func (s *Server) getShopFieldByIdHandler(w http.ResponseWriter, r *http.Request)
 
 func (s *Server) deleteShopByIdHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	name := vars["name"]
+	id := vars["id"]
 
-	c, err := s.shops.Delete(r.Context(), name)
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		http.Error(w, "not valid uuid", http.StatusBadRequest)
+	}
+
+	c, err := s.shops.Delete(r.Context(), uid)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -101,11 +106,13 @@ func (s *Server) createShopHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := s.shops.Create(r.Context(), sh)
+	uid, err := s.shops.Create(r.Context(), sh)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
+	msg := fmt.Sprintf(`{"id":"%v"}`, uid.String())
+	w.Write([]byte(msg))
 }

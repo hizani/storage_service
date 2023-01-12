@@ -22,33 +22,34 @@ func newShops() *shops {
 	}
 }
 
-func (ss *shops) create(ctx context.Context, s repos.Shop) error {
+func (ss *shops) create(ctx context.Context, s repos.Shop) (*uuid.UUID, error) {
 	ss.Lock()
 	defer ss.Unlock()
 
 	select {
 	case <-ctx.Done():
-		return ctx.Err()
+		return nil, ctx.Err()
 	default:
 	}
 	s.Id = uuid.New()
 	if !checkRequiredFields(&s) {
-		return errors.New("required field is missing")
+		return nil, errors.New("required field is missing")
 	}
 	ss.m[s.Id] = s
-	return nil
+	return &s.Id, nil
 }
 
-func (ss *shops) readName(ctx context.Context, name string) (*repos.Shop, error) {
+func (ss *shops) readName(ctx context.Context, name string) ([]repos.Data, error) {
+	data := []repos.Data{}
 	for _, elem := range ss.m {
 		if elem.Name == name {
-			return &elem, nil
+			data = append(data, &elem)
 		}
 	}
-	return nil, fmt.Errorf("no customer with such surname")
+	return data, nil
 }
 
-func (ss *shops) read(ctx context.Context, uid uuid.UUID) (*repos.Shop, error) {
+func (ss *shops) read(ctx context.Context, uid uuid.UUID) ([]repos.Data, error) {
 	ss.RLock()
 	defer ss.RUnlock()
 
@@ -63,7 +64,7 @@ func (ss *shops) read(ctx context.Context, uid uuid.UUID) (*repos.Shop, error) {
 	if !ok {
 		return nil, fmt.Errorf("no such shop")
 	}
-	return &data, nil
+	return []repos.Data{&data}, nil
 }
 func (cs *shops) delete(ctx context.Context, uid uuid.UUID) error {
 	cs.Lock()
