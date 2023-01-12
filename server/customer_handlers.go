@@ -53,13 +53,13 @@ func (s *Server) getCustomerFieldByIdHandler(w http.ResponseWriter, r *http.Requ
 		http.Error(w, "not valid uuid", http.StatusBadRequest)
 	}
 
-	c, err := s.customers.ReadId(r.Context(), uid)
+	cs, err := s.customers.ReadId(r.Context(), uid)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
-	jsoned, _ := json.Marshal(&c)
+	jsoned, _ := json.Marshal(cs)
 	var data map[string]interface{}
 	_ = json.Unmarshal(jsoned, &data)
 

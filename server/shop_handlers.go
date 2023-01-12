@@ -53,13 +53,13 @@ func (s *Server) getShopFieldByIdHandler(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "not valid uuid", http.StatusBadRequest)
 	}
 
-	c, err := s.shops.ReadId(r.Context(), uid)
+	ss, err := s.shops.ReadId(r.Context(), uid)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
-	jsoned, _ := json.Marshal(&c)
+	jsoned, _ := json.Marshal(ss)
 	var data map[string]interface{}
 	_ = json.Unmarshal(jsoned, &data)
 
