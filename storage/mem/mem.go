@@ -4,8 +4,6 @@ import (
 	"context"
 	"crud_service/app/repos"
 	"fmt"
-	"reflect"
-	"strings"
 
 	"github.com/google/uuid"
 )
@@ -40,14 +38,16 @@ func (ms *MemStorage) Read(ctx context.Context, data repos.Data) ([]repos.Data, 
 		if d.Id == uuid.Nil || d.Id.String() == "" {
 			return ms.customers.readSurname(ctx, d.Surname)
 		}
-		return ms.customers.read(ctx, d.Id)
+		val, err := ms.customers.read(ctx, d.Id)
+		return []interface{}{val}, err
 	}
 
 	if d, ok := data.(*repos.Shop); ok {
 		if d.Id == uuid.Nil || d.Id.String() == "" {
 			return ms.shops.readName(ctx, d.Name)
 		}
-		return ms.shops.read(ctx, d.Id)
+		val, err := ms.shops.read(ctx, d.Id)
+		return []interface{}{val}, err
 	}
 
 	return nil, fmt.Errorf("there is no storage for this type of data")
@@ -62,15 +62,4 @@ func (ms *MemStorage) Delete(ctx context.Context, data repos.Data) error {
 	}
 
 	return fmt.Errorf("there is no storage for this type of data")
-}
-
-func checkRequiredFields(d repos.Data) bool {
-	fields := reflect.ValueOf(d).Elem()
-	for i := 0; i < fields.NumField(); i++ {
-		tag := fields.Type().Field(i).Tag.Get("validate")
-		if strings.Contains(tag, "required") && fields.Field(i).IsZero() {
-			return false
-		}
-	}
-	return true
 }

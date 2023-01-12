@@ -3,6 +3,7 @@ package mem
 import (
 	"context"
 	"crud_service/app/repos"
+	"crud_service/storage/common"
 	"errors"
 	"fmt"
 	"sync"
@@ -32,7 +33,7 @@ func (ss *shops) create(ctx context.Context, s repos.Shop) (*uuid.UUID, error) {
 	default:
 	}
 	s.Id = uuid.New()
-	if !checkRequiredFields(&s) {
+	if !common.CheckRequiredFields(&s) {
 		return nil, errors.New("required field is missing")
 	}
 	ss.m[s.Id] = s
@@ -58,7 +59,7 @@ func (ss *shops) readName(ctx context.Context, name string) ([]repos.Data, error
 	return data, nil
 }
 
-func (ss *shops) read(ctx context.Context, uid uuid.UUID) ([]repos.Data, error) {
+func (ss *shops) read(ctx context.Context, uid uuid.UUID) (repos.Data, error) {
 	ss.RLock()
 	defer ss.RUnlock()
 
@@ -73,7 +74,7 @@ func (ss *shops) read(ctx context.Context, uid uuid.UUID) ([]repos.Data, error) 
 	if !ok {
 		return nil, fmt.Errorf("no such shop")
 	}
-	return []repos.Data{&data}, nil
+	return &data, nil
 }
 func (cs *shops) delete(ctx context.Context, uid uuid.UUID) error {
 	cs.Lock()

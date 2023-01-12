@@ -3,6 +3,7 @@ package mem
 import (
 	"context"
 	"crud_service/app/repos"
+	"crud_service/storage/common"
 	"errors"
 	"fmt"
 	"sync"
@@ -37,7 +38,7 @@ func (cs *customers) create(ctx context.Context, c repos.Customer) (*uuid.UUID, 
 		c.RegDate = time.Now()
 	}
 
-	if !checkRequiredFields(&c) {
+	if !common.CheckRequiredFields(&c) {
 		return nil, errors.New("required field is missing")
 	}
 	cs.m[c.Id] = c
@@ -63,7 +64,7 @@ func (cs *customers) readSurname(ctx context.Context, surname string) ([]repos.D
 	return data, nil
 }
 
-func (cs *customers) read(ctx context.Context, uid uuid.UUID) ([]repos.Data, error) {
+func (cs *customers) read(ctx context.Context, uid uuid.UUID) (repos.Data, error) {
 	cs.RLock()
 	defer cs.RUnlock()
 
@@ -78,7 +79,7 @@ func (cs *customers) read(ctx context.Context, uid uuid.UUID) ([]repos.Data, err
 	if !ok {
 		return nil, fmt.Errorf("no customer with such uuid")
 	}
-	return []repos.Data{&data}, nil
+	return &data, nil
 
 }
 
