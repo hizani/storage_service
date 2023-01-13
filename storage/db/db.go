@@ -41,14 +41,16 @@ func (ms *DbStorage) Read(ctx context.Context, data repos.Data) ([]repos.Data, e
 		if d.Id == uuid.Nil || d.Id.String() == "" {
 			return ms.customers.readSurname(ctx, d.Surname)
 		}
-		return ms.customers.read(ctx, d.Id)
+		val, err := ms.customers.read(ctx, d.Id)
+		return []interface{}{val}, err
 	}
 
 	if d, ok := data.(*repos.Shop); ok {
 		if d.Id == uuid.Nil || d.Id.String() == "" {
 			return ms.shops.readName(ctx, d.Name)
 		}
-		return ms.shops.read(ctx, d.Id)
+		val, err := ms.shops.read(ctx, d.Id)
+		return []interface{}{val}, err
 	}
 
 	return nil, fmt.Errorf("there is no storage for this type of data")

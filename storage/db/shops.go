@@ -78,7 +78,7 @@ func (cs *shops) readName(ctx context.Context, name string) ([]repos.Data, error
 	return data, nil
 }
 
-func (ss *shops) read(ctx context.Context, uid uuid.UUID) ([]repos.Data, error) {
+func (ss *shops) read(ctx context.Context, uid uuid.UUID) (repos.Data, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -91,20 +91,13 @@ func (ss *shops) read(ctx context.Context, uid uuid.UUID) ([]repos.Data, error) 
 	}
 	defer raw.Close()
 
-	data := []repos.Data{}
 	raw.Next()
 	row := &repos.Shop{}
 	err = raw.Scan(&row.Id, &row.Name, &row.Address, &row.IsClosed, &row.Owner)
 	if err != nil {
-		return data, fmt.Errorf("no shop with such uuid")
-	}
-	data = append(data, row)
-
-	if len(data) < 1 {
 		return nil, fmt.Errorf("no shop with such uuid")
 	}
-	return data, nil
-
+	return &row, nil
 }
 
 func (ss *shops) delete(ctx context.Context, uid uuid.UUID) error {

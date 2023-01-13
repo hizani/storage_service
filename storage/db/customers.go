@@ -82,7 +82,7 @@ func (cs *customers) readSurname(ctx context.Context, surname string) ([]repos.D
 	return data, nil
 }
 
-func (cs *customers) read(ctx context.Context, uid uuid.UUID) ([]repos.Data, error) {
+func (cs *customers) read(ctx context.Context, uid uuid.UUID) (repos.Data, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -95,19 +95,14 @@ func (cs *customers) read(ctx context.Context, uid uuid.UUID) ([]repos.Data, err
 	}
 	defer raw.Close()
 
-	data := []repos.Data{}
 	raw.Next()
 	row := &repos.Customer{}
 	err = raw.Scan(&row.Id, &row.Surname, &row.Name, &row.Patronymic, &row.Age, &row.RegDate)
 	if err != nil {
-		return data, fmt.Errorf("no customer with such uuid")
-	}
-	data = append(data, row)
-
-	if len(data) < 1 {
 		return nil, fmt.Errorf("no customer with such uuid")
 	}
-	return data, nil
+
+	return row, nil
 
 }
 
