@@ -3,7 +3,9 @@ package db
 import (
 	"context"
 	"crud_service/app/repos"
+	"errors"
 	"fmt"
+	"reflect"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -11,58 +13,109 @@ import (
 
 var _ repos.Storage = &DbStorage{}
 
-// TODO
-// File storage
+// Database storage
 type DbStorage struct {
-	customers *customers
-	shops     *shops
+	connection *pgx.Conn
 }
 
-func New(conn *pgx.Conn) *DbStorage {
-
-	c := newCustomers(conn)
-	s := newShops(conn)
-
-	return &DbStorage{c, s}
+func New(connection *pgx.Conn) *DbStorage {
+	return &DbStorage{connection}
 }
 
-func (ms *DbStorage) Create(ctx context.Context, data repos.Data) (*uuid.UUID, error) {
-	if d, ok := data.(*repos.Customer); ok {
-		return ms.customers.create(ctx, *d)
+func (s *DbStorage) Create(ctx context.Context, d repos.Data) (*uuid.UUID, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
 	}
-	if d, ok := data.(*repos.Shop); ok {
-		return ms.shops.create(ctx, *d)
-	}
+	d.SetDefaults()
 
-	return nil, fmt.Errorf("there is no storage for this type of data")
+	raw, err := d.DbData().Insert(ctx, s.connection)
+
+	if err != nil {
+		return nil, err
+	}
+	defer raw.Close()
+
+	uid := &uuid.UUID{}
+
+	raw.Next()
+	err = raw.Scan(uid)
+	if err != nil {
+		return nil, err
+	}
+	return uid, nil
 }
-func (ms *DbStorage) Read(ctx context.Context, data repos.Data) ([]repos.Data, error) {
-	if d, ok := data.(*repos.Customer); ok {
-		if d.Id == uuid.Nil || d.Id.String() == "" {
-			return ms.customers.readSurname(ctx, d.Surname)
+func (s *DbStorage) Read(ctx context.Context, d repos.Data) (repos.Data, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+	query := fmt.Sprintf(`SELECT * FROM %ss WHERE id = $1`, d.GetTypeName())
+
+	row, err := s.connection.Query(ctx, query, d.GetId())
+	if err != nil {
+		return nil, err
+	}
+	defer row.Close()
+
+	ok := row.Next()
+	if !ok {
+		return nil, errors.New("no record with such uuid")
+	}
+	err = d.DbData().SetFieldsFromDbRow(ctx, row)
+	if err != nil {
+		return nil, err
+	}
+	return d, nil
+}
+func (s *DbStorage) Delete(ctx context.Context, d repos.Data) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+	query := fmt.Sprintf(`DELETE FROM %ss WHERE id = $1`, d.GetTypeName())
+
+	q, err := s.connection.Exec(ctx, query, d.GetId())
+	if err != nil {
+		return err
+	}
+	if q.RowsAffected() < 1 {
+		return fmt.Errorf("no record with such uuid")
+	}
+	return nil
+}
+
+func (s *DbStorage) ReadBySearchField(ctx context.Context, d repos.Data) ([]repos.Data, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+	query := fmt.Sprintf(`SELECT * FROM %ss WHERE %s = $1`, d.GetTypeName(), d.GetSearchFieldName())
+
+	rows, err := s.connection.Query(ctx, query, d.GetSearchField())
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	data := []repos.Data{}
+	for rows.Next() {
+		// Copy d variable
+		newData, ok := reflect.New(reflect.ValueOf(d).Elem().Type()).Interface().(repos.Data)
+		if !ok {
+			return nil, errors.New("can't copy Data")
 		}
-		val, err := ms.customers.read(ctx, d.Id)
-		return []interface{}{val}, err
-	}
-
-	if d, ok := data.(*repos.Shop); ok {
-		if d.Id == uuid.Nil || d.Id.String() == "" {
-			return ms.shops.readName(ctx, d.Name)
+		err = newData.DbData().SetFieldsFromDbRow(ctx, rows)
+		if err != nil {
+			return nil, err
 		}
-		val, err := ms.shops.read(ctx, d.Id)
-		return []interface{}{val}, err
+		data = append(data, newData)
 	}
-
-	return nil, fmt.Errorf("there is no storage for this type of data")
-}
-func (ms *DbStorage) Delete(ctx context.Context, data repos.Data) error {
-	if d, ok := data.(*repos.Customer); ok {
-		return ms.customers.delete(ctx, d.Id)
+	if len(data) < 1 {
+		return nil, errors.New("no records found")
 	}
-
-	if d, ok := data.(*repos.Shop); ok {
-		return ms.shops.delete(ctx, d.Id)
-	}
-
-	return fmt.Errorf("there is no storage for this type of data")
+	return data, nil
 }
