@@ -2,6 +2,7 @@ package repos
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -15,7 +16,7 @@ type Shop struct {
 	Id       uuid.UUID `json:"id" validate:"required"`
 	Name     string    `json:"name" validate:"required"`
 	Address  string    `json:"address" validate:"required"`
-	IsClosed bool      `json:"is_closed" validate:"required"`
+	IsClosed bool      `json:"is_closed"`
 	Owner    *string   `json:"owner"`
 }
 
@@ -30,6 +31,28 @@ func (s *Shop) SetDefaults() {
 	if s.Id == uuid.Nil || s.Id.String() == "" {
 		s.Id = uuid.New()
 	}
+}
+func (s *Shop) SetFromMap(m map[string]interface{}) (Data, error) {
+	ids, ok := m["id"].(string)
+	id, err := uuid.Parse(ids)
+	if !ok || err != nil {
+		return nil, errors.New("can't parse id from the map")
+	}
+	name, ok := m["name"].(string)
+	if !ok {
+		return nil, errors.New("can't parse name from the map")
+	}
+	addr, ok := m["address"].(string)
+	if !ok {
+		return nil, errors.New("can't parse address from the map")
+	}
+	isClosed, ok := m["is_closed"].(bool)
+	if !ok {
+		return nil, errors.New("can't parse is_closed from the map")
+	}
+	owner, _ := m["owner"].(*string)
+	s = &Shop{id, name, addr, isClosed, owner}
+	return s, nil
 }
 func (s *Shop) Insert(ctx context.Context, connection *pgx.Conn) (pgx.Rows, error) {
 	raw, err := connection.Query(ctx, `INSERT INTO shops (id, name, address, is_closed, owner) 

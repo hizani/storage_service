@@ -2,6 +2,7 @@ package repos
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -18,6 +19,7 @@ type Data interface {
 	GetSearchField() string
 	GetSearchFieldName() string
 	SetDefaults()
+	SetFromMap(m map[string]interface{}) (Data, error)
 	DbData() DbData
 }
 
@@ -46,6 +48,7 @@ func checkRequired(d Data) bool {
 	for i := 0; i < fields.NumField(); i++ {
 		tag := fields.Type().Field(i).Tag.Get("validate")
 		if strings.Contains(tag, "required") && fields.Field(i).IsZero() {
+			fmt.Println(fields.Field(i))
 			return false
 		}
 	}

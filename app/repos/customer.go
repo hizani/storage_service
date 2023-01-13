@@ -2,6 +2,7 @@ package repos
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -35,6 +36,36 @@ func (c *Customer) SetDefaults() {
 	if c.RegDate.IsZero() {
 		c.RegDate = time.Now()
 	}
+}
+func (c *Customer) SetFromMap(m map[string]interface{}) (Data, error) {
+	ids, ok := m["id"].(string)
+	id, err := uuid.Parse(ids)
+	if !ok || err != nil {
+		return nil, errors.New("can't parse id from the map")
+	}
+	surname, ok := m["surname"].(string)
+	if !ok {
+		return nil, errors.New("can't parse surname from the map")
+	}
+	name, ok := m["name"].(string)
+	if !ok {
+		return nil, errors.New("can't parse name from the map")
+	}
+	patr, ok := m["patronymic"].(string)
+	if !ok {
+		return nil, errors.New("can't parse patronymic from the map")
+	}
+	age, _ := m["age"].(*uint)
+	st, ok := m["reg_date"].(string)
+	if !ok {
+		return nil, errors.New("can't parse time from the map")
+	}
+	t, err := time.Parse(time.RFC3339, st)
+	if err != nil {
+		return nil, errors.New("can't parse time")
+	}
+	c = &Customer{id, surname, name, patr, age, t}
+	return c, nil
 }
 
 func (c *Customer) Insert(ctx context.Context, connection *pgx.Conn) (pgx.Rows, error) {
