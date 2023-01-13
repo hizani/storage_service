@@ -34,7 +34,7 @@ func (s *MemStorage) Create(ctx context.Context, d repos.Data) (*uuid.UUID, erro
 	default:
 	}
 	d.SetDefaults()
-	if d.CheckRequired() {
+	if !d.CheckRequired() {
 		return nil, errors.New("required field is missing")
 	}
 	id := d.GetId()
