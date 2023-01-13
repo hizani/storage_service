@@ -38,7 +38,7 @@ type Storage interface {
 	// Delete Data from the storage by data UUID
 	Delete(ctx context.Context, data Data) error
 	// Return []Data with occurrences of Data search field
-	ReadBySearchField(ctx context.Context, d Data) ([]Data, error)
+	ReadBySearchField(ctx context.Context, data Data) ([]Data, error)
 }
 
 func checkRequired(d Data) bool {
