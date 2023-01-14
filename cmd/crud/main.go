@@ -52,7 +52,11 @@ func main() {
 		st = db.New(conn)
 
 	case "file":
-		st = fs.New(cfg.Folder.Path)
+		st, err = fs.New(cfg.Folder.Path)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return
+		}
 
 	default:
 		fmt.Printf("Usage: %v runtime|database|file\n", os.Args[0])
