@@ -16,17 +16,24 @@ func (s *Server) getCustomerByIdHandler(w http.ResponseWriter, r *http.Request) 
 
 	uid, err := uuid.Parse(id)
 	if err != nil {
-		http.Error(w, "not valid uuid", http.StatusBadRequest)
+		badRequest(w, "bad uuid")
+		return
 	}
 
 	c, err := s.customers.ReadId(r.Context(), uid)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		internalError(w, err)
 		return
 	}
 
+	if c == nil {
+		notFound(w)
+		return
+	}
+	cj, _ := json.Marshal(c)
+	j, _ := json.Marshal(payload{true, string(cj)})
 	w.WriteHeader(http.StatusFound)
-	_ = json.NewEncoder(w).Encode(c)
+	w.Write(j)
 }
 
 func (s *Server) getCustomerBySurnameHandler(w http.ResponseWriter, r *http.Request) {
@@ -35,12 +42,19 @@ func (s *Server) getCustomerBySurnameHandler(w http.ResponseWriter, r *http.Requ
 
 	c, err := s.customers.ReadSurname(r.Context(), surname)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		internalError(w, err)
 		return
 	}
 
+	if c == nil || len(c) < 1 {
+		notFound(w)
+		return
+	}
+
+	cj, _ := json.Marshal(c)
+	j, _ := json.Marshal(payload{true, string(cj)})
 	w.WriteHeader(http.StatusFound)
-	_ = json.NewEncoder(w).Encode(c)
+	w.Write(j)
 }
 
 func (s *Server) getCustomerFieldByIdHandler(w http.ResponseWriter, r *http.Request) {
@@ -50,27 +64,34 @@ func (s *Server) getCustomerFieldByIdHandler(w http.ResponseWriter, r *http.Requ
 
 	uid, err := uuid.Parse(id)
 	if err != nil {
-		http.Error(w, "not valid uuid", http.StatusBadRequest)
-	}
-
-	cs, err := s.customers.ReadId(r.Context(), uid)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		badRequest(w, "bad uuid")
 		return
 	}
 
-	jsoned, _ := json.Marshal(cs)
+	c, err := s.customers.ReadId(r.Context(), uid)
+	if err != nil {
+		internalError(w, err)
+		return
+	}
+	if c == nil {
+		notFound(w)
+		return
+	}
+
+	jsoned, _ := json.Marshal(c)
 	var data map[string]interface{}
 	_ = json.Unmarshal(jsoned, &data)
 
 	elem, ok := data[field]
 	if !ok {
-		http.Error(w, "there is no such field", http.StatusNotFound)
+		notFound(w)
 		return
 	}
+
+	cj, _ := json.Marshal(elem)
+	j, _ := json.Marshal(payload{true, string(cj)})
 	w.WriteHeader(http.StatusFound)
-	msg := interfaceToJson(field, elem)
-	w.Write(msg)
+	w.Write(j)
 }
 
 func (s *Server) deleteCustomerByIdHandler(w http.ResponseWriter, r *http.Request) {
@@ -79,18 +100,25 @@ func (s *Server) deleteCustomerByIdHandler(w http.ResponseWriter, r *http.Reques
 
 	uid, err := uuid.Parse(id)
 	if err != nil {
-		http.Error(w, "not valid uuid", http.StatusBadRequest)
+		badRequest(w, "bad uuid")
+		return
 	}
 
 	c, err := s.customers.Delete(r.Context(), uid)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		internalError(w, err)
 		return
-
 	}
 
+	if c == nil {
+		notFound(w)
+		return
+	}
+
+	cj, _ := json.Marshal(c)
+	j, _ := json.Marshal(payload{true, string(cj)})
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(*c)
+	w.Write(j)
 }
 
 func (s *Server) createCustomerHandler(w http.ResponseWriter, r *http.Request) {
@@ -98,16 +126,21 @@ func (s *Server) createCustomerHandler(w http.ResponseWriter, r *http.Request) {
 
 	c := &repos.Customer{}
 	if err := json.NewDecoder(r.Body).Decode(c); err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
+		badRequest(w, "bad json")
 		return
 	}
 	uid, err := s.customers.Create(r.Context(), *c)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		if err, ok := err.(*repos.RequiredMissingError); ok {
+			badRequest(w, fmt.Sprint("required field is missing: ", err))
+			return
+		}
+		internalError(w, err)
 		return
 	}
 
+	cj, _ := json.Marshal(uid)
+	j, _ := json.Marshal(payload{true, string(cj)})
 	w.WriteHeader(http.StatusCreated)
-	msg := fmt.Sprintf(`{"id":"%v"}`, uid.String())
-	w.Write([]byte(msg))
+	w.Write(j)
 }

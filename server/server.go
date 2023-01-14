@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 	"crud_service/app/repos"
-	"fmt"
+	"encoding/json"
 	"log"
 	"net/http"
 	"time"
@@ -54,12 +54,20 @@ func (s *Server) Stop() {
 	cancel()
 }
 
-func interfaceToJson(name string, value interface{}) []byte {
-	if elem, ok := value.(float64); ok {
-		return []byte(fmt.Sprintf(`{"%v":%v}`, name, elem))
-	}
-	if elem, ok := value.(bool); ok {
-		return []byte(fmt.Sprintf(`{"%v":%v}`, name, elem))
-	}
-	return []byte((fmt.Sprintf(`{"%v":"%v"}`, name, value)))
+func internalError(w http.ResponseWriter, err error) {
+	payload := payload{false, "server error"}
+	j, _ := json.Marshal(payload)
+	http.Error(w, string(j), http.StatusInternalServerError)
+}
+
+func badRequest(w http.ResponseWriter, msg string) {
+	payload := payload{false, msg}
+	j, _ := json.Marshal(payload)
+	http.Error(w, string(j), http.StatusBadRequest)
+}
+
+func notFound(w http.ResponseWriter) {
+	payload := payload{false, ""}
+	j, _ := json.Marshal(payload)
+	http.Error(w, string(j), http.StatusNotFound)
 }

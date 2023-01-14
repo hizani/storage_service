@@ -3,7 +3,6 @@ package server
 import (
 	"crud_service/app/repos"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -16,17 +15,25 @@ func (s *Server) getShopByIdHandler(w http.ResponseWriter, r *http.Request) {
 
 	uid, err := uuid.Parse(id)
 	if err != nil {
-		http.Error(w, "not valid uuid", http.StatusBadRequest)
+		badRequest(w, "bad uuid")
+		return
 	}
 
 	sh, err := s.shops.ReadId(r.Context(), uid)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		internalError(w, err)
 		return
 	}
 
+	if sh == nil {
+		notFound(w)
+		return
+	}
+
+	cj, _ := json.Marshal(sh)
+	j, _ := json.Marshal(payload{true, string(cj)})
 	w.WriteHeader(http.StatusFound)
-	_ = json.NewEncoder(w).Encode(sh)
+	w.Write(j)
 }
 
 func (s *Server) getShopByNameHandler(w http.ResponseWriter, r *http.Request) {
@@ -35,12 +42,19 @@ func (s *Server) getShopByNameHandler(w http.ResponseWriter, r *http.Request) {
 
 	sh, err := s.shops.ReadName(r.Context(), name)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		internalError(w, err)
 		return
 	}
 
+	if sh == nil || len(sh) < 1 {
+		notFound(w)
+		return
+	}
+
+	cj, _ := json.Marshal(sh)
+	j, _ := json.Marshal(payload{true, string(cj)})
 	w.WriteHeader(http.StatusFound)
-	_ = json.NewEncoder(w).Encode(sh)
+	w.Write(j)
 }
 
 func (s *Server) getShopFieldByIdHandler(w http.ResponseWriter, r *http.Request) {
@@ -50,12 +64,18 @@ func (s *Server) getShopFieldByIdHandler(w http.ResponseWriter, r *http.Request)
 
 	uid, err := uuid.Parse(id)
 	if err != nil {
-		http.Error(w, "not valid uuid", http.StatusBadRequest)
+		badRequest(w, "bad uuid")
+		return
 	}
 
 	ss, err := s.shops.ReadId(r.Context(), uid)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		internalError(w, err)
+		return
+	}
+
+	if ss == nil {
+		notFound(w)
 		return
 	}
 
@@ -65,13 +85,14 @@ func (s *Server) getShopFieldByIdHandler(w http.ResponseWriter, r *http.Request)
 
 	elem, ok := data[field]
 	if !ok {
-		http.Error(w, "there is no such field", http.StatusNotFound)
+		notFound(w)
 		return
 	}
 
+	cj, _ := json.Marshal(elem)
+	j, _ := json.Marshal(payload{true, string(cj)})
 	w.WriteHeader(http.StatusFound)
-	msg := interfaceToJson(field, elem)
-	w.Write(msg)
+	w.Write(j)
 }
 
 func (s *Server) deleteShopByIdHandler(w http.ResponseWriter, r *http.Request) {
@@ -80,18 +101,25 @@ func (s *Server) deleteShopByIdHandler(w http.ResponseWriter, r *http.Request) {
 
 	uid, err := uuid.Parse(id)
 	if err != nil {
-		http.Error(w, "not valid uuid", http.StatusBadRequest)
-	}
-
-	c, err := s.shops.Delete(r.Context(), uid)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		badRequest(w, "bad uuid")
 		return
-
 	}
 
+	ss, err := s.shops.Delete(r.Context(), uid)
+	if err != nil {
+		internalError(w, err)
+		return
+	}
+
+	if ss == nil {
+		notFound(w)
+		return
+	}
+
+	cj, _ := json.Marshal(ss)
+	j, _ := json.Marshal(payload{true, string(cj)})
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(*c)
+	w.Write(j)
 }
 
 func (s *Server) createShopHandler(w http.ResponseWriter, r *http.Request) {
@@ -99,17 +127,22 @@ func (s *Server) createShopHandler(w http.ResponseWriter, r *http.Request) {
 
 	sh := repos.Shop{}
 	if err := json.NewDecoder(r.Body).Decode(&sh); err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
+		badRequest(w, "bad json")
 		return
 	}
 
 	uid, err := s.shops.Create(r.Context(), sh)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		if err, ok := err.(*repos.RequiredMissingError); ok {
+			badRequest(w, err.Error())
+			return
+		}
+		internalError(w, err)
 		return
 	}
 
+	cj, _ := json.Marshal(uid)
+	j, _ := json.Marshal(payload{true, string(cj)})
 	w.WriteHeader(http.StatusCreated)
-	msg := fmt.Sprintf(`{"id":"%v"}`, uid.String())
-	w.Write([]byte(msg))
+	w.Write(j)
 }
