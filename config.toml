@@ -1,0 +1,13 @@
+[folder]
+path = ""
+
+[database]
+host = "localhost"
+port = 5432
+user = "postgres"
+pass = "postgres"
+db = "crud_test"
+
+[server]
+host = "localhost"
+port = 8080
