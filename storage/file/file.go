@@ -24,6 +24,9 @@ type FileStorage struct {
 }
 
 func New(path string) *FileStorage {
+	if path == "" {
+		path, _ = os.Getwd()
+	}
 	if path[len(path)-1:] != string(os.PathSeparator) {
 		path = fmt.Sprintf("%s%s", path, string(os.PathSeparator))
 	}
