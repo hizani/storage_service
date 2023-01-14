@@ -3,7 +3,6 @@ package mem
 import (
 	"context"
 	"crud_service/app/repos"
-	"errors"
 	"sync"
 
 	"github.com/google/uuid"
@@ -34,8 +33,8 @@ func (s *MemStorage) Create(ctx context.Context, d repos.Data) (*uuid.UUID, erro
 	default:
 	}
 	d.SetDefaults()
-	if !d.CheckRequired() {
-		return nil, errors.New("required field is missing")
+	if err := d.CheckRequired(); err != nil {
+		return nil, err
 	}
 	id := d.GetId()
 	if s.m[d.GetTypeName()] == nil {

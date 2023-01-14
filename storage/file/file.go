@@ -55,8 +55,8 @@ func (s *FileStorage) Create(ctx context.Context, data repos.Data) (*uuid.UUID, 
 	}
 	data.SetDefaults()
 
-	if !data.CheckRequired() {
-		return nil, errors.New("required field is missing")
+	if err := data.CheckRequired(); err != nil {
+		return nil, err
 	}
 
 	err := s.create(data)

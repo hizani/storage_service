@@ -30,6 +30,9 @@ func (s *DbStorage) Create(ctx context.Context, d repos.Data) (*uuid.UUID, error
 	}
 	d.SetDefaults()
 
+	if err := d.CheckRequired(); err != nil {
+		return nil, err
+	}
 	raw, err := d.DbData().Insert(ctx, s.connection)
 
 	if err != nil {
