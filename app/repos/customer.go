@@ -30,9 +30,8 @@ func (c *Customer) GetSearchField() string          { return c.Surname }
 func (c *Customer) GetSearchFieldName() string      { return "surname" }
 func (c *Customer) DbData() DbData                  { return c }
 func (c *Customer) SetDefaults() {
-	if c.Id == uuid.Nil || c.Id.String() == "" {
-		c.Id = uuid.New()
-	}
+	c.Id = uuid.New()
+
 	if c.RegDate.IsZero() {
 		c.RegDate = time.Now()
 	}
@@ -111,7 +110,11 @@ func (cs *Customers) ReadSurname(ctx context.Context, surname string) ([]*Custom
 		return nil, fmt.Errorf("read customer error: %v", err)
 	}
 
-	var result []*Customer
+	result := []*Customer{}
+	if len(data) < 1 {
+		return result, nil
+	}
+
 	for _, foo := range data {
 		c, ok := foo.(*Customer)
 		if !ok {
@@ -129,13 +132,22 @@ func (cs *Customers) ReadId(ctx context.Context, uid uuid.UUID) (*Customer, erro
 		return nil, fmt.Errorf("read customer error: %v", err)
 	}
 
-	return data.(*Customer), nil
+	c, ok := data.(*Customer)
+	if !ok {
+		return nil, nil
+	}
+
+	return c, nil
 }
 
 func (cs *Customers) Delete(ctx context.Context, uid uuid.UUID) (*Customer, error) {
 	data, err := cs.storage.Read(ctx, &Customer{Id: uid})
 	if err != nil {
-		return nil, fmt.Errorf("can not find customer: %v", err)
+		return nil, fmt.Errorf("delete customer error: %v", err)
 	}
-	return data.(*Customer), cs.storage.Delete(ctx, data)
+	c, ok := data.(*Customer)
+	if !ok {
+		return nil, nil
+	}
+	return c, cs.storage.Delete(ctx, data)
 }

@@ -55,13 +55,13 @@ func (s *MemStorage) Read(ctx context.Context, d repos.Data) (repos.Data, error)
 	}
 
 	if s.m[d.GetTypeName()] == nil {
-		return nil, errors.New("no record with such uuid")
+		return nil, nil
 	}
 
 	data, ok := s.m[d.GetTypeName()][d.GetId()]
 
 	if !ok {
-		return nil, errors.New("no record with such uuid")
+		return nil, nil
 	}
 	return data, nil
 }
@@ -76,12 +76,9 @@ func (s *MemStorage) Delete(ctx context.Context, d repos.Data) error {
 	}
 
 	if s.m[d.GetTypeName()] == nil {
-		return errors.New("no record with such uuid")
+		return nil
 	}
 
-	if _, deleted := s.m[d.GetTypeName()][d.GetId()]; !deleted {
-		return errors.New("no record with such uuid")
-	}
 	delete(s.m[d.GetTypeName()], d.GetId())
 
 	return nil

@@ -23,14 +23,21 @@ type FileStorage struct {
 	dirPath string
 }
 
-func New(path string) *FileStorage {
+func New(path string) (*FileStorage, error) {
 	if path == "" {
 		path, _ = os.Getwd()
+	}
+	folderInfo, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return nil, errors.New("folder does not exist")
+	}
+	if !folderInfo.IsDir() {
+		return nil, errors.New("is not a directory")
 	}
 	if path[len(path)-1:] != string(os.PathSeparator) {
 		path = fmt.Sprintf("%s%s", path, string(os.PathSeparator))
 	}
-	return &FileStorage{mtxs: make(map[string]*sync.RWMutex), dirPath: path}
+	return &FileStorage{mtxs: make(map[string]*sync.RWMutex), dirPath: path}, nil
 }
 
 func (s *FileStorage) Create(ctx context.Context, data repos.Data) (*uuid.UUID, error) {
@@ -131,7 +138,7 @@ func (s *FileStorage) delete(data repos.Data) error {
 		}
 	}
 	if !ok {
-		return errors.New("no record with such uuid")
+		return nil
 	}
 
 	byteData, err := json.Marshal(res)
@@ -200,7 +207,7 @@ func (s *FileStorage) read(data repos.Data) (repos.Data, error) {
 		}
 	}
 
-	return nil, errors.New("no record with such uuid")
+	return nil, nil
 
 }
 

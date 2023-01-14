@@ -27,11 +27,7 @@ func (s *Shop) GetTypeName() string             { return "shop" }
 func (s *Shop) GetSearchField() string          { return s.Name }
 func (s *Shop) GetSearchFieldName() string      { return "name" }
 func (s *Shop) DbData() DbData                  { return s }
-func (s *Shop) SetDefaults() {
-	if s.Id == uuid.Nil || s.Id.String() == "" {
-		s.Id = uuid.New()
-	}
-}
+func (s *Shop) SetDefaults()                    { s.Id = uuid.New() }
 func (s *Shop) SetFromMap(m map[string]interface{}) (Data, error) {
 	ids, ok := m["id"].(string)
 	id, err := uuid.Parse(ids)
@@ -96,8 +92,10 @@ func (ss *Shops) ReadName(ctx context.Context, name string) ([]*Shop, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read shop error: %v", err)
 	}
-
 	result := []*Shop{}
+	if len(data) < 1 {
+		return result, nil
+	}
 	for _, foo := range data {
 		c, ok := foo.(*Shop)
 		if !ok {
@@ -116,17 +114,21 @@ func (ss *Shops) ReadId(ctx context.Context, uid uuid.UUID) (*Shop, error) {
 	}
 
 	s, ok := data.(*Shop)
-	if !ok {
-		return nil, fmt.Errorf("read shop error: %v", err)
+	if !ok || s == nil {
+		return nil, nil
 	}
 
 	return s, nil
 }
 
 func (ss *Shops) Delete(ctx context.Context, uid uuid.UUID) (*Shop, error) {
-	s, err := ss.storage.Read(ctx, &Shop{Id: uid})
+	data, err := ss.storage.Read(ctx, &Shop{Id: uid})
 	if err != nil {
 		return nil, fmt.Errorf("read shop error: %v", err)
 	}
-	return s.(*Shop), ss.storage.Delete(ctx, s)
+	s, ok := data.(*Shop)
+	if !ok || s == nil {
+		return nil, nil
+	}
+	return s, ss.storage.Delete(ctx, s)
 }

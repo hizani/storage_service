@@ -62,7 +62,7 @@ func (s *DbStorage) Read(ctx context.Context, d repos.Data) (repos.Data, error) 
 
 	ok := row.Next()
 	if !ok {
-		return nil, errors.New("no record with such uuid")
+		return nil, nil
 	}
 	err = d.DbData().SetFieldsFromDbRow(ctx, row)
 	if err != nil {
@@ -78,13 +78,11 @@ func (s *DbStorage) Delete(ctx context.Context, d repos.Data) error {
 	}
 	query := fmt.Sprintf(`DELETE FROM %ss WHERE id = $1`, d.GetTypeName())
 
-	q, err := s.connection.Exec(ctx, query, d.GetId())
+	_, err := s.connection.Exec(ctx, query, d.GetId())
 	if err != nil {
 		return err
 	}
-	if q.RowsAffected() < 1 {
-		return fmt.Errorf("no record with such uuid")
-	}
+
 	return nil
 }
 
@@ -113,9 +111,6 @@ func (s *DbStorage) ReadBySearchField(ctx context.Context, d repos.Data) ([]repo
 			return nil, err
 		}
 		data = append(data, newData)
-	}
-	if len(data) < 1 {
-		return nil, errors.New("no records found")
 	}
 	return data, nil
 }
