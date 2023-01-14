@@ -23,7 +23,7 @@ type Customer struct {
 }
 
 func (c *Customer) CmpSearchField(data string) bool { return data == c.Surname }
-func (c *Customer) CheckRequired() bool             { return checkRequired(c) }
+func (c *Customer) CheckRequired() error            { return checkRequired(c) }
 func (c *Customer) GetId() uuid.UUID                { return c.Id }
 func (c *Customer) GetTypeName() string             { return "customer" }
 func (c *Customer) GetSearchField() string          { return c.Surname }
@@ -98,6 +98,9 @@ func NewCustomers(storage Storage) *Customers {
 
 func (cs *Customers) Create(ctx context.Context, c Customer) (*uuid.UUID, error) {
 	uid, err := cs.storage.Create(ctx, &c)
+	if err, ok := err.(*RequiredMissingError); ok {
+		return nil, err
+	}
 	if err != nil {
 		return nil, fmt.Errorf("create customer error: %v", err)
 	}

@@ -2,7 +2,6 @@ package repos
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"strings"
 
@@ -10,9 +9,15 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+type RequiredMissingError struct {
+	msg string // name of missing field
+}
+
+func (e *RequiredMissingError) Error() string { return e.msg }
+
 // Interface of storage data
 type Data interface {
-	CheckRequired() bool
+	CheckRequired() error
 	CmpSearchField(data string) bool
 	GetId() uuid.UUID
 	GetTypeName() string
@@ -43,14 +48,13 @@ type Storage interface {
 	ReadBySearchField(ctx context.Context, data Data) ([]Data, error)
 }
 
-func checkRequired(d Data) bool {
+func checkRequired(d Data) error {
 	fields := reflect.ValueOf(d).Elem()
 	for i := 0; i < fields.NumField(); i++ {
 		tag := fields.Type().Field(i).Tag.Get("validate")
 		if strings.Contains(tag, "required") && fields.Field(i).IsZero() {
-			fmt.Println(fields.Field(i))
-			return false
+			return &RequiredMissingError{fields.Type().Field(i).Tag.Get("json")}
 		}
 	}
-	return true
+	return nil
 }

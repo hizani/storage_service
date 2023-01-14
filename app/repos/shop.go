@@ -21,7 +21,7 @@ type Shop struct {
 }
 
 func (s *Shop) CmpSearchField(data string) bool { return data == s.Name }
-func (s *Shop) CheckRequired() bool             { return checkRequired(s) }
+func (s *Shop) CheckRequired() error            { return checkRequired(s) }
 func (s *Shop) GetId() uuid.UUID                { return s.Id }
 func (s *Shop) GetTypeName() string             { return "shop" }
 func (s *Shop) GetSearchField() string          { return s.Name }
@@ -81,6 +81,9 @@ func NewShops(storage Storage) *Shops {
 
 func (ss *Shops) Create(ctx context.Context, s Shop) (*uuid.UUID, error) {
 	uid, err := ss.storage.Create(ctx, &s)
+	if err, ok := err.(*RequiredMissingError); ok {
+		return nil, err
+	}
 	if err != nil {
 		return nil, fmt.Errorf("create shop error: %v", err)
 	}
