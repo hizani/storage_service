@@ -12,6 +12,7 @@ Saves data in a storage of choice: *runtime*, *file*, *database*
 go run cmd/storage_service/main.go runtime
 ```
 
+---
 
 ## http_server
 HTTP server that communicate with [storage](storage) via gRPC. 
