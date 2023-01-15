@@ -6,10 +6,10 @@ Storage gRPC service.
 Saves data in a storage of choice: *runtime*, *file*, *database*
 ## Usage
 1. Set up `config.toml` file
-2. Run `go run cmd/main.go` with one of the following arguments: `runtime`, `file`, `database`
+2. Run `go run cmd/main.go STORAGE CONFIG` where **STORAGE** is one of the following arguments: `runtime`, `file`, `database` and **CONFIG** is a path to the config file.
 ### Example
 ```
-go run cmd/storage_service/main.go runtime
+go run cmd/storage_service/main.go runtime config.toml
 ```
 
 ---
