@@ -1,0 +1,46 @@
+- kind: 2
+  language: dothttp-vscode
+  value: >
+    // Create Customer
+
+    POST "localhost:8080/customers/create"
+
+    json(
+        {"surname":"surname", "patronymic":"patr", "name":"name", }
+    )
+
+
+    GET "localhost:8080/customers/6f194f2e-ffef-4e83-8c5d-9e583e49e38f"
+
+    GET "localhost:8080/customers/dd0a85d5-fa3e-4d8f-831f-5a8e3a09c6b3/surname"
+
+    GET "localhost:8080/customers/search/surname"
+
+    DELETE
+    "localhost:8080/customers/delete/b00484ae-125c-47b3-a5ee-35570d708212"
+  outputs:
+    - mime: x-application/dotbook
+      value: "{\n\t\"response\": {\n\t\t\"body\": \"\",\n\t\t\"output_file\": \"\",\n\t\t\"headers\": {},\n\t\t\"status\": 200,\n\t\t\"method\": \"GET\",\n\t\t\"url\": \"http://localhost:8080/customers/search/surname\",\n\t\t\"response\": {\n\t\t\t\"body\": \"{\\\"success\\\":true,\\\"status\\\":200,\\\"message\\\":\\\"reading successful\\\",\\\"customers\\\":[{\\\"id\\\":\\\"49649390-9180-43d7-9ddf-308b5f812eac\\\",\\\"surname\\\":\\\"surname\\\",\\\"name\\\":\\\"name\\\",\\\"patronymic\\\":\\\"aboba\\\",\\\"regDate\\\":\\\"2023-01-15T21:07:56.338106260Z\\\"},{\\\"id\\\":\\\"71f04ebc-1df4-42a7-b62b-cd56f4749c3b\\\",\\\"surname\\\":\\\"surname\\\",\\\"name\\\":\\\"name\\\",\\\"patronymic\\\":\\\"aboba\\\",\\\"regDate\\\":\\\"2023-01-15T21:07:57.156250607Z\\\"}]}\",\n\t\t\t\"output_file\": \"\",\n\t\t\t\"headers\": {\n\t\t\t\t\"Content-Type\": \"application/json\",\n\t\t\t\t\"Date\": \"Sun, 15 Jan 2023 21:09:51 GMT\",\n\t\t\t\t\"Content-Length\": \"362\"\n\t\t\t},\n\t\t\t\"status\": 200,\n\t\t\t\"method\": \"GET\",\n\t\t\t\"url\": \"http://localhost:8080/customers/search/surname\",\n\t\t\t\"contentType\": \"application/json\"\n\t\t},\n\t\t\"script_result\": {\n\t\t\t\"stdout\": \"\",\n\t\t\t\"error\": \"\",\n\t\t\t\"properties\": {},\n\t\t\t\"tests\": [],\n\t\t\t\"compiled\": true\n\t\t},\n\t\t\"http\": \"@name(\\\"4\\\")\\nGET \\\"http://localhost:8080/customers/search/surname\\\"\\n\\n\\n\\n\",\n\t\t\"filenameExtension\": \"json\"\n\t},\n\t\"metadata\": {\n\t\t\"uri\": {\n\t\t\t\"$mid\": 1,\n\t\t\t\"fsPath\": \"/home/hizani/src/projects/go/src/intern_task/reqs.httpbook\",\n\t\t\t\"external\": \"vscode-notebook-cell:/home/hizani/src/projects/go/src/intern_task/reqs.httpbook#W0sZmlsZQ%3D%3D\",\n\t\t\t\"path\": \"/home/hizani/src/projects/go/src/intern_task/reqs.httpbook\",\n\t\t\t\"scheme\": \"vscode-notebook-cell\",\n\t\t\t\"fragment\": \"W0sZmlsZQ==\"\n\t\t},\n\t\t\"cellNo\": 0,\n\t\t\"date\": \"2023-09-16--00-01-51\",\n\t\t\"target\": \"4\",\n\t\t\"executionTime\": \"0.0\"\n\t}\n}"
+    - mime: text/x-json
+      value: >-
+        {"success":true,"status":200,"message":"reading
+        successful","customers":[{"id":"49649390-9180-43d7-9ddf-308b5f812eac","surname":"surname","name":"name","patronymic":"aboba","regDate":"2023-01-15T21:07:56.338106260Z"},{"id":"71f04ebc-1df4-42a7-b62b-cd56f4749c3b","surname":"surname","name":"name","patronymic":"aboba","regDate":"2023-01-15T21:07:57.156250607Z"}]}
+- kind: 2
+  language: dothttp-vscode
+  value: |-
+    POST "localhost:8080/shops/create"
+    json(
+        {"address":"patr", "is_closed":true, "name":"name", "owner":"abobus"}
+    )
+
+    GET "localhost:8080/shops/929588f7-3b32-40eb-8459-b2f5d48cb0e7"
+    GET "localhost:8080/shops/7f6e3f47-89f4-4328-a42a-1f03e5fac1a5/name"
+    GET "localhost:8080/shops/search/name"
+    DELETE "localhost:8080/shops/delete/c899e133-a8c0-41ac-b89a-3fae948ecd95"
+  outputs:
+    - mime: x-application/dotbook
+      value: "{\n\t\"response\": {\n\t\t\"body\": \"\",\n\t\t\"output_file\": \"\",\n\t\t\"headers\": {},\n\t\t\"status\": 200,\n\t\t\"method\": \"GET\",\n\t\t\"url\": \"http://localhost:8080/shops/929588f7-3b32-40eb-8459-b2f5d48cb0e7\",\n\t\t\"response\": {\n\t\t\t\"body\": \"{\\\"success\\\":true,\\\"status\\\":200,\\\"message\\\":\\\"read successfully\\\",\\\"shops\\\":[{\\\"id\\\":\\\"929588f7-3b32-40eb-8459-b2f5d48cb0e7\\\",\\\"name\\\":\\\"name\\\",\\\"address\\\":\\\"patr\\\",\\\"isClosed\\\":true}]}\",\n\t\t\t\"output_file\": \"\",\n\t\t\t\"headers\": {\n\t\t\t\t\"Content-Type\": \"application/json\",\n\t\t\t\t\"Date\": \"Sun, 15 Jan 2023 21:26:33 GMT\",\n\t\t\t\t\"Content-Length\": \"162\"\n\t\t\t},\n\t\t\t\"status\": 200,\n\t\t\t\"method\": \"GET\",\n\t\t\t\"url\": \"http://localhost:8080/shops/929588f7-3b32-40eb-8459-b2f5d48cb0e7\",\n\t\t\t\"contentType\": \"application/json\"\n\t\t},\n\t\t\"script_result\": {\n\t\t\t\"stdout\": \"\",\n\t\t\t\"error\": \"\",\n\t\t\t\"properties\": {},\n\t\t\t\"tests\": [],\n\t\t\t\"compiled\": true\n\t\t},\n\t\t\"http\": \"@name(\\\"2\\\")\\nGET \\\"http://localhost:8080/shops/929588f7-3b32-40eb-8459-b2f5d48cb0e7\\\"\\n\\n\\n\\n\",\n\t\t\"filenameExtension\": \"json\"\n\t},\n\t\"metadata\": {\n\t\t\"uri\": {\n\t\t\t\"$mid\": 1,\n\t\t\t\"fsPath\": \"/home/hizani/src/projects/go/src/intern_task/reqs.httpbook\",\n\t\t\t\"external\": \"vscode-notebook-cell:/home/hizani/src/projects/go/src/intern_task/reqs.httpbook#W1sZmlsZQ%3D%3D\",\n\t\t\t\"path\": \"/home/hizani/src/projects/go/src/intern_task/reqs.httpbook\",\n\t\t\t\"scheme\": \"vscode-notebook-cell\",\n\t\t\t\"fragment\": \"W1sZmlsZQ==\"\n\t\t},\n\t\t\"cellNo\": 1,\n\t\t\"date\": \"2023-26-16--00-01-33\",\n\t\t\"target\": \"2\",\n\t\t\"executionTime\": \"0.0\"\n\t}\n}"
+    - mime: text/x-json
+      value: >-
+        {"success":true,"status":200,"message":"read
+        successfully","shops":[{"id":"929588f7-3b32-40eb-8459-b2f5d48cb0e7","name":"name","address":"patr","isClosed":true}]}
