@@ -6,12 +6,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/hizani/crud_service/storage_service/model"
 	"github.com/jackc/pgx/v5"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
-
-var _ model.Data = &Customer{}
 
 func (c *Customer) CmpSearchField(data string) bool { return data == c.Surname }
 func (c *Customer) GetTypeName() string             { return "customer" }

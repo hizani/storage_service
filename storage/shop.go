@@ -5,11 +5,8 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
-	"github.com/hizani/crud_service/storage_service/model"
 	"github.com/jackc/pgx/v5"
 )
-
-var _ model.Data = &Shop{}
 
 func (s *Shop) CmpSearchField(data string) bool { return data == s.Name }
 func (s *Shop) CheckRequired() error {
