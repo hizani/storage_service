@@ -1,0 +1,34 @@
+- kind: 2
+  language: dothttp-vscode
+  value: >
+    // Create Customer
+
+    POST "localhost:8080/customers/create"
+
+    json(
+        {"surname":"surname", "patronymic":"patr", "name":"name", }
+    )
+
+
+    GET "localhost:8080/customers/6f194f2e-ffef-4e83-8c5d-9e583e49e38f"
+
+    GET "localhost:8080/customers/dd0a85d5-fa3e-4d8f-831f-5a8e3a09c6b3/surname"
+
+    GET "localhost:8080/customers/search/surname"
+
+    DELETE
+    "localhost:8080/customers/delete/b00484ae-125c-47b3-a5ee-35570d708212"
+  outputs: []
+- kind: 2
+  language: dothttp-vscode
+  value: |-
+    POST "localhost:8080/shops/create"
+    json(
+        {"address":"patr", "is_closed":true, "name":"name", "owner":"abobus"}
+    )
+
+    GET "localhost:8080/shops/929588f7-3b32-40eb-8459-b2f5d48cb0e7"
+    GET "localhost:8080/shops/7f6e3f47-89f4-4328-a42a-1f03e5fac1a5/name"
+    GET "localhost:8080/shops/search/name"
+    DELETE "localhost:8080/shops/delete/c899e133-a8c0-41ac-b89a-3fae948ecd95"
+  outputs: []

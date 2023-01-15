@@ -2,25 +2,23 @@ package main
 
 import (
 	"context"
-	"crud_service/app"
-	"crud_service/app/repos"
-	"crud_service/cmd/crud/config"
-	"crud_service/server"
-	"crud_service/storage/db"
-	fs "crud_service/storage/file"
-	"crud_service/storage/mem"
 	"fmt"
 	"os"
 	"os/signal"
-	"sync"
 
+	"github.com/hizani/crud_service/cmd/storage_service/config"
+	"github.com/hizani/crud_service/storage_service"
+	"github.com/hizani/crud_service/storage_service/db"
+	fs "github.com/hizani/crud_service/storage_service/file"
+	"github.com/hizani/crud_service/storage_service/mem"
+	"github.com/hizani/crud_service/storage_service/model"
 	"github.com/jackc/pgx/v5"
 )
 
 func main() {
 	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt)
 
-	var st repos.Storage
+	var st model.Storage
 	if len(os.Args) < 3 {
 		fmt.Printf("Usage: %v runtime|database|file CONFIG_PATH\n", os.Args[0])
 		return
@@ -63,14 +61,10 @@ func main() {
 		return
 	}
 	conStr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
-	srv := server.New(conStr)
 
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
-
-	app := app.New(st)
-	go app.Serve(ctx, wg, srv)
+	ss := storage_service.New(st)
+	ss.Start(conStr)
 
 	<-ctx.Done()
-	wg.Wait()
+	ss.Wg.Wait()
 }

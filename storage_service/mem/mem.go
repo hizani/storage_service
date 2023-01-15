@@ -2,28 +2,27 @@ package mem
 
 import (
 	"context"
-	"crud_service/app/repos"
 	"sync"
 
-	"github.com/google/uuid"
+	"github.com/hizani/crud_service/storage_service/model"
 )
 
-var _ repos.Storage = &MemStorage{}
+var _ model.Storage = &MemStorage{}
 
 // Runtime storage
 type MemStorage struct {
 	sync.RWMutex
-	m map[string]map[uuid.UUID]repos.Data
+	m map[string]map[string]model.Data
 }
 
 func New() *MemStorage {
 	return &MemStorage{
-		m: make(map[string]map[uuid.UUID]repos.Data),
+		m: make(map[string]map[string]model.Data),
 	}
 
 }
 
-func (s *MemStorage) Create(ctx context.Context, d repos.Data) (*uuid.UUID, error) {
+func (s *MemStorage) Create(ctx context.Context, d model.Data) (model.Data, error) {
 	s.Lock()
 	defer s.Unlock()
 
@@ -38,12 +37,12 @@ func (s *MemStorage) Create(ctx context.Context, d repos.Data) (*uuid.UUID, erro
 	}
 	id := d.GetId()
 	if s.m[d.GetTypeName()] == nil {
-		s.m[d.GetTypeName()] = make(map[uuid.UUID]repos.Data)
+		s.m[d.GetTypeName()] = make(map[string]model.Data)
 	}
 	s.m[d.GetTypeName()][id] = d
-	return &id, nil
+	return d, nil
 }
-func (s *MemStorage) Read(ctx context.Context, d repos.Data) (repos.Data, error) {
+func (s *MemStorage) Read(ctx context.Context, d model.Data) (model.Data, error) {
 	s.RLock()
 	defer s.RUnlock()
 
@@ -64,7 +63,7 @@ func (s *MemStorage) Read(ctx context.Context, d repos.Data) (repos.Data, error)
 	}
 	return data, nil
 }
-func (s *MemStorage) Delete(ctx context.Context, d repos.Data) error {
+func (s *MemStorage) Delete(ctx context.Context, d model.Data) error {
 	s.Lock()
 	defer s.Unlock()
 
@@ -83,7 +82,7 @@ func (s *MemStorage) Delete(ctx context.Context, d repos.Data) error {
 	return nil
 }
 
-func (s *MemStorage) ReadBySearchField(ctx context.Context, d repos.Data) ([]repos.Data, error) {
+func (s *MemStorage) ReadBySearchField(ctx context.Context, d model.Data) ([]model.Data, error) {
 	s.RLock()
 	defer s.RUnlock()
 
@@ -93,7 +92,7 @@ func (s *MemStorage) ReadBySearchField(ctx context.Context, d repos.Data) ([]rep
 	default:
 	}
 
-	data := []repos.Data{}
+	data := []model.Data{}
 	for _, elem := range s.m[d.GetTypeName()] {
 		if elem.CmpSearchField(d.GetSearchField()) {
 			data = append(data, elem)

@@ -2,7 +2,6 @@ package file
 
 import (
 	"context"
-	"crud_service/app/repos"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,10 +10,10 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/google/uuid"
+	"github.com/hizani/crud_service/storage_service/model"
 )
 
-var _ repos.Storage = &FileStorage{}
+var _ model.Storage = &FileStorage{}
 
 // File storage
 type FileStorage struct {
@@ -40,7 +39,7 @@ func New(path string) (*FileStorage, error) {
 	return &FileStorage{mtxs: make(map[string]*sync.RWMutex), dirPath: path}, nil
 }
 
-func (s *FileStorage) Create(ctx context.Context, data repos.Data) (*uuid.UUID, error) {
+func (s *FileStorage) Create(ctx context.Context, data model.Data) (model.Data, error) {
 	s.m.Lock()
 	if s.mtxs[data.GetTypeName()] == nil {
 		s.mtxs[data.GetTypeName()] = &sync.RWMutex{}
@@ -64,12 +63,10 @@ func (s *FileStorage) Create(ctx context.Context, data repos.Data) (*uuid.UUID, 
 		return nil, err
 	}
 
-	uid := data.GetId()
-
-	return &uid, nil
+	return data, nil
 }
 
-func (s *FileStorage) Read(ctx context.Context, data repos.Data) (repos.Data, error) {
+func (s *FileStorage) Read(ctx context.Context, data model.Data) (model.Data, error) {
 	s.m.Lock()
 	if s.mtxs[data.GetTypeName()] == nil {
 		s.mtxs[data.GetTypeName()] = &sync.RWMutex{}
@@ -85,7 +82,7 @@ func (s *FileStorage) Read(ctx context.Context, data repos.Data) (repos.Data, er
 	return s.read(data)
 
 }
-func (s *FileStorage) Delete(ctx context.Context, data repos.Data) error {
+func (s *FileStorage) Delete(ctx context.Context, data model.Data) error {
 	s.m.Lock()
 	if s.mtxs[data.GetTypeName()] == nil {
 		s.mtxs[data.GetTypeName()] = &sync.RWMutex{}
@@ -101,7 +98,7 @@ func (s *FileStorage) Delete(ctx context.Context, data repos.Data) error {
 
 	return s.delete(data)
 }
-func (s *FileStorage) ReadBySearchField(ctx context.Context, data repos.Data) ([]repos.Data, error) {
+func (s *FileStorage) ReadBySearchField(ctx context.Context, data model.Data) ([]model.Data, error) {
 	s.m.Lock()
 	if s.mtxs[data.GetTypeName()] == nil {
 		s.mtxs[data.GetTypeName()] = &sync.RWMutex{}
@@ -117,7 +114,7 @@ func (s *FileStorage) ReadBySearchField(ctx context.Context, data repos.Data) ([
 	return s.readSearchField(data)
 }
 
-func (s *FileStorage) delete(data repos.Data) error {
+func (s *FileStorage) delete(data model.Data) error {
 	res, err := s.readSlice(data)
 	if err != nil {
 		return err
@@ -163,7 +160,7 @@ func (s *FileStorage) delete(data repos.Data) error {
 
 }
 
-func (s *FileStorage) readSlice(data repos.Data) ([]repos.Data, error) {
+func (s *FileStorage) readSlice(data model.Data) ([]model.Data, error) {
 	filename := fmt.Sprintf("%s%s%s.json", s.dirPath, string(os.PathSeparator), data.GetTypeName())
 	file, err := os.Open(filename)
 	if err != nil {
@@ -180,13 +177,13 @@ func (s *FileStorage) readSlice(data repos.Data) ([]repos.Data, error) {
 	if err := json.Unmarshal(jsonByte, &ires); err != nil {
 		return nil, err
 	}
-	var res = []repos.Data{}
+	var res = []model.Data{}
 	for _, elem := range ires {
-		newData, ok := reflect.New(reflect.ValueOf(data).Elem().Type()).Interface().(repos.Data)
+		newData, ok := reflect.New(reflect.ValueOf(data).Elem().Type()).Interface().(model.Data)
 		if !ok {
 			return nil, errors.New("can't copy Data")
 		}
-		newData, err = newData.SetFromMap(elem)
+		err = newData.SetFromMap(elem)
 		if err != nil {
 			return nil, err
 		}
@@ -195,7 +192,7 @@ func (s *FileStorage) readSlice(data repos.Data) ([]repos.Data, error) {
 	return res, nil
 }
 
-func (s *FileStorage) read(data repos.Data) (repos.Data, error) {
+func (s *FileStorage) read(data model.Data) (model.Data, error) {
 	res, err := s.readSlice(data)
 	if err != nil {
 		return nil, err
@@ -211,12 +208,12 @@ func (s *FileStorage) read(data repos.Data) (repos.Data, error) {
 
 }
 
-func (s *FileStorage) readSearchField(data repos.Data) ([]repos.Data, error) {
+func (s *FileStorage) readSearchField(data model.Data) ([]model.Data, error) {
 	res, err := s.readSlice(data)
 	if err != nil {
 		return nil, err
 	}
-	dataSlice := []repos.Data{}
+	dataSlice := []model.Data{}
 	for _, elem := range res {
 		if elem.CmpSearchField(data.GetSearchField()) {
 			dataSlice = append(dataSlice, elem)
@@ -227,7 +224,7 @@ func (s *FileStorage) readSearchField(data repos.Data) ([]repos.Data, error) {
 
 }
 
-func (s *FileStorage) create(data repos.Data) error {
+func (s *FileStorage) create(data model.Data) error {
 	filename := fmt.Sprintf("%s%s%s.json", s.dirPath, string(os.PathSeparator), data.GetTypeName())
 	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
