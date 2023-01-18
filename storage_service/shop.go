@@ -126,9 +126,9 @@ func (ss *StorageService) ReadShopBySearchField(ctx context.Context, req *storag
 		return resp, nil
 	}
 
-	result := []*storage.Shop{}
-	for _, foo := range data {
-		s, ok := foo.(*storage.Shop)
+	result := make([]*storage.Shop, 0, len(data))
+	for _, sh := range data {
+		s, ok := sh.(*storage.Shop)
 		if !ok {
 			return nil, errors.New("can't parse shop")
 		}

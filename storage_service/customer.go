@@ -127,9 +127,9 @@ func (ss *StorageService) ReadCustomerBySearchField(ctx context.Context, req *st
 		return resp, nil
 	}
 
-	result := []*storage.Customer{}
-	for _, foo := range data {
-		c, ok := foo.(*storage.Customer)
+	result := make([]*storage.Customer, 0, len(data))
+	for _, cs := range data {
+		c, ok := cs.(*storage.Customer)
 		if !ok {
 			return nil, errors.New("can't parse customer")
 		}
