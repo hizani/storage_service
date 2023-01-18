@@ -1,4 +1,4 @@
-# Intern project for wb
+# Microservice data storage application
 There are two services: [http_server](http_server) and [storage_service](storage_service)
 
 ## storage_service
